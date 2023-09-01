@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2023-08-31T21:31:04.074Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36" etag="D_cXeaJgbaoYyy6-n2rQ" version="21.6.9" type="github">
+<mxfile host="app.diagrams.net" modified="2023-09-01T01:45:00.102Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36" etag="kM1YxGiOECGQtU0c4jem" version="21.6.9" type="github">
   <diagram id="R2lEEEUBdFMjLlhIrx00" name="Page-1">
-    <mxGraphModel dx="971" dy="1134" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0" extFonts="Permanent Marker^https://fonts.googleapis.com/css?family=Permanent+Marker">
+    <mxGraphModel dx="1335" dy="957" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0" extFonts="Permanent Marker^https://fonts.googleapis.com/css?family=Permanent+Marker">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1149,8 +1149,8 @@
         <mxCell id="S2tQENDXbDARH6V6zAQ_-346" value="1. As given in the dataset &lt;br&gt;(relations &amp;amp; constraints added)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
           <mxGeometry x="-22" y="-278" width="244" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="S2tQENDXbDARH6V6zAQ_-362" value="3. A snowflake schema for user history information with grain set at each session of content viewing." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
-          <mxGeometry x="1851.88" y="-251" width="244" height="60" as="geometry" />
+        <mxCell id="S2tQENDXbDARH6V6zAQ_-362" value="3. A snowflake schema for user session history information with grain set at each session of content viewing." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="1716" y="-202" width="244" height="60" as="geometry" />
         </mxCell>
         <mxCell id="j-EP9Lbds9NNxHxeqd_j-139" value="" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERoneToMany;endFill=1;startFill=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="S2tQENDXbDARH6V6zAQ_-149" target="S2tQENDXbDARH6V6zAQ_-257">
           <mxGeometry width="100" height="100" relative="1" as="geometry">
