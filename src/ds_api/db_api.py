@@ -1,3 +1,7 @@
+"""
+This module provides utilities for reading from and writing to a database using SQLAlchemy.
+"""
+
 import os
 import logging
 
@@ -14,19 +18,45 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 class db_api:
+    """
+    A class to interact with a PostgreSQL database using SQLAlchemy.
+    """
+
     def __init__(self):
+        """
+        Initialize the db_api class and connect to the database.
+        """
         self.engine = self.connect_to_db()
         self.set_search_path()
 
     def connect_to_db(self):
+        """
+        Connect to the PostgreSQL database using information from environment variables.
+
+        Returns:
+            Engine object: SQLAlchemy engine.
+        """
         db_url = f"postgresql+psycopg2://{os.getenv('DS_USER')}:{os.getenv('DS_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
         return create_engine(db_url)
 
     def set_search_path(self):
+        """
+        Set the search path for the current connection to use the 'relational' schema.
+        """
         with self.engine.begin() as conn:
             conn.execute(text("SET search_path TO relational;"))
 
     def read(self, query, params=None):
+        """
+        Execute a SQL read query and return the result.
+
+        Parameters:
+            query (str): The SQL query to execute.
+            params (dict, optional): Parameters for the SQL query.
+
+        Returns:
+            Tuple: Result data and columns names.
+        """
         try:
             with self.engine.connect() as conn:
                 result = conn.execute(text(query).bindparams(**params if params else {}))
@@ -38,6 +68,13 @@ class db_api:
         return data, columns
     
     def write(self, query, params=None):
+        """
+        Execute a SQL write query.
+
+        Parameters:
+            query (str): The SQL query to execute.
+            params (dict, optional): Parameters for the SQL query.
+        """
         try:
             with self.engine.begin() as conn:
                 conn.execute(text(query).bindparams(**params if params else {}))
@@ -48,6 +85,18 @@ class db_api:
 api = db_api()
 
 def read(query, **kwargs):
+    """
+    Read data from the database and return it as a DataFrame.
+
+    Parameters:
+        query (str): The SQL query to execute.
+        **kwargs:
+            params (dict, optional): Parameters for the SQL query.
+            verbose (bool, optional): If True, print the result. Default is True.
+
+    Returns:
+        DataFrame: The result of the query.
+    """
     data, columns = api.read(query, params=kwargs.get('params'))
     if data is None or columns is None:
         logger.error("Query returned None.")
@@ -58,4 +107,12 @@ def read(query, **kwargs):
     return df
 
 def write(query, **kwargs):
+    """
+    Write data to the database.
+
+    Parameters:
+        query (str): The SQL query to execute.
+        **kwargs:
+            params (dict, optional): Parameters for the SQL query.
+    """
     api.write(query, params=kwargs.get('params'))
