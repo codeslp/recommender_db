@@ -1,36 +1,52 @@
-import pytest
-from src.ds_api.db_api import query_db
+import unittest
+from ds_api.db_api import read, write
 
-def test_titles_table_exists(test_db):
-    result, _ = query_db("SELECT EXISTS (SELECT FROM relational.tables WHERE table_name='titles');", False)
-    assert result[0][0] == True
+class TestDBAPI(unittest.TestCase):
 
-def test_genres_table_exists(test_db):
-    result, _ = query_db("SELECT EXISTS (SELECT FROM relational.tables WHERE table_name='genres');", False)
-    assert result[0][0] == True
+    def setUp(self):
+        """Setup mock data for testing."""
+        self.insert_query = """
+        INSERT INTO users (user_id, birth_date, subscription_date, subscription_type) 
+        VALUES ('999', '2020-01-01', '2021-01-01', 'premium');
+        """
+        write(self.insert_query)
 
-def test_prod_countries_table_exists(test_db):
-    result, _ = query_db("SELECT EXISTS (SELECT FROM relational.tables WHERE table_name='prod_countries');", False)
-    assert result[0][0] == True
+    def tearDown(self):
+        """Cleanup test data after each test."""
+        delete_query = """
+        DELETE FROM users WHERE user_id = '999';
+        """
+        write(delete_query)
 
-def test_credits_table_exists(test_db):
-    result, _ = query_db("SELECT EXISTS (SELECT FROM relational.tables WHERE table_name='credits');", False)
-    assert result[0][0] == True
+    def test_read_function(self):
+        """Test the read function."""
+        select_query = """
+        SELECT * 
+        FROM users
+        WHERE user_id = '1';
+        """
+        df = read(select_query)
+        self.assertEqual(df.iloc[0]['user_id'], 1)
 
-def test_users_table_exists(test_db):
-    result, _ = query_db("SELECT EXISTS (SELECT FROM relational.tables WHERE table_name='users');", False)
-    assert result[0][0] == True
+    def test_write_function(self):
+        """Test the write function."""
+        # Deleting and then adding the data back to test the write function
+        delete_query = """
+        DELETE FROM users WHERE user_id = '999';
+        """
+        write(delete_query)
+        
+        select_query = """
+        SELECT * 
+        FROM users
+        WHERE user_id IN ('999');
+        """
+        df = read(select_query, verbose=False) # Using verbose=False to suppress the table output
+        self.assertTrue(df.empty) # After deletion, no data should be returned
+        
+        write(self.insert_query)
+        df = read(select_query, verbose=False)
+        self.assertFalse(df.empty) # After insertion, data should be returned
 
-def test_sessions_table_exists(test_db):
-    result, _ = query_db("SELECT EXISTS (SELECT FROM relational.tables WHERE table_name='sessions');", False)
-    assert result[0][0] == True
-
-def test_content_type_constraint(test_db):
-    with pytest.raises(Exception):
-        query_db("INSERT INTO relational.titles (content_id, title, content_type, release_year) VALUES ('invalid12345', 'Invalid Movie', 'invalid', 2020);", False)
-
-def test_subscription_type_constraint(test_db):
-    with pytest.raises(Exception):
-        query_db("INSERT INTO relational.users (user_id, subscription_type) VALUES (99999, 'invalid');", False)
-
-# Additional tests for CRUD operations, relationships, etc., should be added as needed.
+if __name__ == "__main__":
+    unittest.main()
