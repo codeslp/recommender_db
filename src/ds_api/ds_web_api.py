@@ -4,12 +4,12 @@ import logging
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, OperationalError, StatementError, DataError
 from typing import Optional, List
 
-from models import (Title, Genre, ProdCountry, Credit, User, ViewSession, TitleFilter,
+from models import (Titles, Genre, ProdCountry, Credit, User, ViewSession, TitleFilter,
                     GenreFilter, CreditFilter, UserFilter, ProdCountryFilter, ViewSessionFilter)
 
 load_dotenv()
@@ -22,30 +22,37 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+
 db_url = f"postgresql+psycopg2://{os.getenv('DS_USER')}:{os.getenv('DS_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 engine = create_engine(db_url)
 
+def set_search_path(dbapi_connection, connection_record):
+    """
+    Set the search path for the current connection to use the 'relational' schema.
+    """
+    cursor = dbapi_connection.cursor()
+    cursor.execute("SET search_path TO relational;")
+    cursor.close()
+
+event.listen(engine, "connect", set_search_path)
+
 @app.exception_handler(IntegrityError)
 def handle_integrity_error(request, exc):
-    session.rollback()
     logger.error(f"Integrity Error: {exc}")
     return HTTPException(status_code=400, detail=f"This entry may already exist or violate a constraint: {exc}")
 
 @app.exception_handler(OperationalError)
 def handle_operational_error(request, exc):
-    session.rollback()
     logger.error(f"Operational Error: {exc}")
     return HTTPException(status_code=500, detail=f"An issue with the database operation occurred: {exc}")
 
 @app.exception_handler(StatementError)
 def handle_statement_error(request, exc):
-    session.rollback()
     logger.error(f"Statement Error: {exc}")
     return HTTPException(status_code=400, detail=f"SQL statement issue: {exc}")
 
 @app.exception_handler(DataError)
 def handle_data_error(request, exc):
-    session.rollback()
     logger.error(f"Data Error: {exc}")
     return HTTPException(status_code=400, detail=f"Issue with the processed data: {exc}")
 
@@ -59,18 +66,18 @@ def get_session():
     session = Session(engine)
     try:
         yield session
-        session.commit()
     except:
         session.rollback()
         raise
     finally:
         session.close()
 
-@app.post("/title/")
-def create_title(title: Title, session: Session = Depends(get_session)):
-    session.add(title)
-    session.refresh(title)
-    return title
+@app.post("/titles/")
+def create_title(titles: Titles, session: Session = Depends(get_session)):
+    session.add(titles)
+    session.commit()
+    session.refresh(titles)
+    return titles
 
 @app.post("/title/search/")
 def search_title(title_filter: TitleFilter, session: Session = Depends(get_session)):
@@ -83,6 +90,7 @@ def search_title(title_filter: TitleFilter, session: Session = Depends(get_sessi
 @app.post("/genre/")
 def create_genre(genre: Genre, session: Session = Depends(get_session)):
     session.add(genre)
+    session.commit()
     session.refresh(genre)
     return genre
 
@@ -97,6 +105,7 @@ def search_genre(genre_filter: GenreFilter, session: Session = Depends(get_sessi
 @app.post("/prod_country/")
 def create_prod_country(prod_country: ProdCountry, session: Session = Depends(get_session)):
     session.add(prod_country)
+    session.commit()
     session.refresh(prod_country)
     return prod_country
 
@@ -112,6 +121,7 @@ def search_prod_country(prod_country_filter: ProdCountryFilter, session: Session
 @app.post("/credit/")
 def create_credit(credit: Credit, session: Session = Depends(get_session)):
     session.add(credit)
+    session.commit()
     session.refresh(credit)
     return credit
 
@@ -126,6 +136,7 @@ def search_credit(credit_filter: CreditFilter, session: Session = Depends(get_se
 @app.post("/user/")
 def create_user(user: User, session: Session = Depends(get_session)):
     session.add(user)
+    session.commit()
     session.refresh(user)
     return user
 
@@ -140,6 +151,7 @@ def search_user(user_filter: UserFilter, session: Session = Depends(get_session)
 @app.post("/view_session/")
 def create_view_session(view_session: ViewSession, session: Session = Depends(get_session)):
     session.add(view_session)
+    session.commit()
     session.refresh(view_session)
     return view_session
 
