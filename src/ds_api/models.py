@@ -8,11 +8,14 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from datetime import date
 from enum import Enum
+from pydantic import validator
 from sqlalchemy import PrimaryKeyConstraint, ForeignKeyConstraint
-from sqlmodel import SQLModel, Field
+from sqlmodel import Field, SQLModel, Session
 from typing import Optional
 
-class Title(SQLModel, table=True):
+class Titles(SQLModel, table=True):
+    __tablename__ = "titles"
+    __table_args__ = {"schema": "relational"}
     content_id: str = Field(primary_key=True, max_length=10)
     title: Optional[str] = Field(max_length=200)
     content_type: str = Field(max_length=5)
@@ -25,6 +28,10 @@ class Title(SQLModel, table=True):
     imdb_votes: Optional[int]
     is_year_best: Optional[bool]
     is_all_time_best: Optional[bool]
+
+    @validator("content_type", pre=True, always=True)
+    def set_content_type_to_lower(cls, v: str) -> str:
+        return v.lower()
 
 class TitleFilter(SQLModel):
     content_id: Optional[str] = Field(max_length=10)
@@ -40,31 +47,33 @@ class TitleFilter(SQLModel):
     is_year_best: Optional[bool]
     is_all_time_best: Optional[bool]
 
-class Genre(SQLModel, table=True):
+class Genres(SQLModel, table=True):
+    __tablename__ = "genres"
+    __table_args__ = (PrimaryKeyConstraint('content_id', 'genre'), {'schema': 'relational'})
     content_id: str = Field(foreign_key="titles.content_id")
     genre: Optional[str] = Field(max_length=20)
     is_main_genre: bool
 
-    __table_args__ = (PrimaryKeyConstraint('content_id', 'genre'),)
 
 class GenreFilter(SQLModel):
     content_id: Optional[str] = Field(max_length=10)
     genre: Optional[str] = Field(max_length=20)
     is_main_genre: Optional[bool]
 
-class ProdCountry(SQLModel, table=True):
+class ProdCountries(SQLModel, table=True):
+    __tablename__ = "prod_countries"
     content_id: str = Field(foreign_key="titles.content_id")
     country: str = Field(max_length=20)
     is_main_country: bool
-
-    __table_args__ = (PrimaryKeyConstraint('content_id', 'country'),)
+    __table_args__ = (PrimaryKeyConstraint('content_id', 'country'), {'schema': 'relational'})
 
 class ProdCountryFilter(SQLModel):
     content_id: Optional[str] = Field(max_length=10)
     country: Optional[str] = Field(max_length=20)
     is_main_country: Optional[bool]
 
-class Credit(SQLModel, table=True):
+class Credits(SQLModel, table=True):
+    __table_name__ = "credits"
     content_id: str = Field(foreign_key="titles.content_id")
     person_id: str = Field(max_length=7)
     first_name: str = Field(max_length=35)
@@ -72,8 +81,7 @@ class Credit(SQLModel, table=True):
     last_name: str = Field(max_length=40)
     character: str = Field(max_length=400)
     role: str = Field(max_length=15)
-
-    __table_args__ = (PrimaryKeyConstraint('content_id', 'person_id', 'first_name', 'last_name', 'character', 'role'),)
+    __table_args__ = (PrimaryKeyConstraint('content_id', 'person_id', 'first_name', 'last_name', 'character', 'role'), {'schema': 'relational'})
 
 class CreditFilter(SQLModel):
     content_id: Optional[str] = Field(max_length=10)
@@ -89,7 +97,9 @@ class SubscriptionType(str, Enum):
     standard = "standard"
     premium = "premium"
 
-class User(SQLModel, table=True):
+class Users(SQLModel, table=True):
+    __tablename__ = "users"
+    __table_args__ = {'schema': 'relational'}
     user_id: int = Field(primary_key=True)
     birth_date: Optional[date]
     subscription_date: Optional[date]
@@ -101,14 +111,15 @@ class UserFilter(SQLModel):
     subscription_date: Optional[date]
     subscription_type: Optional[SubscriptionType]
 
-class ViewSession(SQLModel, table=True):
+class ViewSessions(SQLModel, table=True):
+    __tablename__ = "sessions"
     start_timestamp: date
     end_timestamp: date
     content_id: str = Field(foreign_key="titles.content_id")
     user_id: int = Field(foreign_key="users.user_id")
     user_rating: Optional[int]
 
-    __table_args__ = (PrimaryKeyConstraint('start_timestamp', 'end_timestamp', 'content_id', 'user_id'),)
+    __table_args__ = (PrimaryKeyConstraint('start_timestamp', 'end_timestamp', 'content_id', 'user_id'), {'schema': 'relational'})
 
 class ViewSessionFilter(SQLModel):
     start_timestamp: Optional[date]
