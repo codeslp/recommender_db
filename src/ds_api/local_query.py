@@ -1,4 +1,4 @@
-from db_api import read, write
+from db_local_api import read, write
 
 """
 Instructions for using this module:
@@ -22,18 +22,18 @@ data_frame = read("SELECT * FROM users WHERE ...;")
 """
 
 query = """
-    INSERT INTO users (user_id, birth_date, subscription_date, subscription_type) 
+    INSERT INTO relational.users (user_id, birth_date, subscription_date, subscription_type) 
     VALUES ('999', '2020-01-01', '2021-01-01', 'premium');
     """
 write(query)
 
 read("""
      SELECT * 
-     FROM users
+     FROM relational.users
      WHERE user_id IN ('999');
      """)
 
 query = """
-    DELETE FROM users WHERE user_id = '999';
+    DELETE FROM relational.users WHERE user_id = '999';
     """
 write(query)
