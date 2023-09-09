@@ -28,10 +28,11 @@ class Titles(SQLModel, table=True):
     imdb_votes: Optional[int]
     is_year_best: Optional[bool]
     is_all_time_best: Optional[bool]
-    genres: List["Genres"] = Relationship(back_populates="titles")  # Added relationship to Genres
-    prod_countries: List["ProdCountries"] = Relationship(back_populates="titles")  # Added relationship to ProdCountries
-    credits: List["Credits"] = Relationship(back_populates="titles")  # Added relationship to Credits
-    sessions: List["ViewSessions"] = Relationship(back_populates="titles")  # Added relationship to ViewSessions
+    genres: List["Genres"] = Relationship(back_populates="titles")
+    prod_countries: List["ProdCountries"] = Relationship(back_populates="titles")
+    credits: List["Credits"] = Relationship(back_populates="titles")
+    sessions: List["ViewSessions"] = Relationship(back_populates="titles")
+    recommendations: List["Recommendations"] = Relationship(back_populates="titles")
 
     @validator("content_type", pre=True, always=True)
     def set_content_type_to_lower(cls, v: str) -> str:
@@ -90,7 +91,7 @@ class Credits(SQLModel, table=True):
     role: str = Field(max_length=15)
     __table_args__ = (PrimaryKeyConstraint('content_id', 'person_id', 'first_name', 'last_name', 'character', 'role'), {'schema': 'relational'})
     titles: "Titles" = Relationship(back_populates="credits")
-    
+
 class CreditFilter(SQLModel):
     content_id: Optional[str] = Field(max_length=10)
     person_id: Optional[str] = Field(max_length=7)
@@ -113,6 +114,7 @@ class Users(SQLModel, table=True):
     subscription_date: Optional[date]
     subscription_type: SubscriptionType
     sessions: List["ViewSessions"] = Relationship(back_populates="users")
+    recommendations: List["Recommendations"] = Relationship(back_populates="users")
 
 
 class UserFilter(SQLModel):
@@ -138,3 +140,10 @@ class ViewSessionFilter(SQLModel):
     content_id: Optional[str] = Field(max_length=10)
     user_id: Optional[int]
     user_rating: Optional[int]
+
+class Recommendations(SQLModel):
+    content_id: str = Field(foreign_key="relational.titles.content_id")
+    user_id: int = Field(foreign_key="relational.users.user_id")
+    __table_args__ = (PrimaryKeyConstraint('content_id', 'user_id'), {'schema': 'relational'})
+    users: "Users" = Relationship(back_populates="recommendations")
+    titles: "Titles" = Relationship(back_populates="recommendations")
