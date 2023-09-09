@@ -63,7 +63,6 @@ def handle_request_validation_error(request, exc):
     raise HTTPException(status_code=422, detail=f"Invalid request: {exc}")
 
 
-
 """
 I have used POST instead of GET for the search filtering, because I don't 
 want to expose the search parameters in the URL and I don't want to cache
@@ -120,7 +119,7 @@ def create_genre(genre: Genres, session: Session = Depends(get_session)):
 @app.post("/genre/delete/")
 def delete_genre(genre_filter: GenreFilter, session: Session = Depends(get_session)):
     non_none_filter = {k: v for k, v in genre_filter.dict().items() if v is not None}
-    query = session.query(Titles).filter_by(**non_none_filter)
+    query = session.query(Genres).filter_by(**non_none_filter)
     results = query.all()
     if not results:
         raise HTTPException(status_code=404, detail=f"No entries in genres table found with provided filter: {genre_filter.dict()}")
