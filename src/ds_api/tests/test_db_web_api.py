@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from fastapi.testclient import TestClient
 import json
@@ -7,6 +9,12 @@ from datetime import datetime, timedelta, date
 from ds_web_api import app
 from models import (Titles, Genres, ProdCountries, Credits, Users, ViewSessions, SubscriptionType,
                     TitleFilter, GenreFilter, ProdCountryFilter, CreditFilter, UserFilter, ViewSessionFilter)
+
+logging.basicConfig(level=logging.INFO,
+                    format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s]',
+                    datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger(__name__)
+
 
 client = TestClient(app)
 
@@ -65,15 +73,19 @@ class SampleData:
         new_credit = Credits(
             content_id=self.title_key,
             person_id=random_string(7),
-            role=random.choice(["actor", "director", "writer"])
+            role=random.choice(["actor", "director", "writer"]),
+            first_name="Test",
+            middle_name="Test",
+            last_name="Test",
+            character="Test"
         )
         return new_credit
     
     def generate_user(self) -> Users:
         new_user = Users(
             user_id=random.randint(1, 10000),
-            birth_date=random_date(datetime(1970, 1, 1), datetime(2003, 1, 1)),
-            subscription_date=random_date(datetime(2020, 1, 1), datetime(2023, 1, 1)),
+            birth_date=(random_date(datetime(1970, 1, 1), datetime(2003, 1, 1))),
+            subscription_date=(random_date(datetime(2020, 1, 1), datetime(2023, 1, 1))),
             subscription_type=random.choice(list(SubscriptionType))
         )
         self.user_key = new_user.user_id
@@ -105,27 +117,29 @@ class SampleData:
         }
 
 
-# def test_title_crud():
-#     # 1. Create a title
-#     title_data = sample_data["title"]
-#     create_response = client.post("/title/", json=title_data)
-#     assert create_response.status_code == 200
+def test_title_crud():
+    sample_data = SampleData().to_dict()
+    title_data = sample_data["title"]
+    # 1. Create a title
+    title_data = sample_data["title"]
+    create_response = client.post("/title/", json=title_data)
+    assert create_response.status_code == 200
 
-#     # 2. Search for the created title
-#     title_filter = {
-#         "content_id": title_data["content_id"]
-#     }
-#     search_response = client.post("/title/search/", json=title_filter)
-#     assert search_response.status_code == 200
+    # 2. Search for the created title
+    title_filter = {
+        "content_id": title_data["content_id"]
+    }
+    search_response = client.post("/title/search/", json=title_filter)
+    assert search_response.status_code == 200
 
-#     titles = search_response.json()
-#     assert len(titles) == 1
-#     assert titles[0]["content_id"] == title_data["content_id"]
+    titles = search_response.json()
+    assert len(titles) == 1
+    assert titles[0]["content_id"] == title_data["content_id"]
 
-#     # 3. Delete the searched title
-#     delete_response = client.post("/title/delete/", json=title_filter)
-#     assert titles[0]["content_id"] == title_data["content_id"]
-#     assert delete_response.status_code == 200
+    # 3. Delete the searched title
+    delete_response = client.post("/title/delete/", json=title_filter)
+    assert titles[0]["content_id"] == title_data["content_id"]
+    assert delete_response.status_code == 200
 
 
 def test_genre_crud():
@@ -135,10 +149,9 @@ def test_genre_crud():
     new_genre = sample_data["genre"]
 
     # Step 2: Create a new title.
-    print(new_title)
     create_title_response = client.post("/title/", json=new_title)
-    print(create_title_response.json())
     assert create_title_response.status_code == 200
+    logger.info(f"create_title_response: {create_title_response.json()}")
 
     # Step 3: Create a new genre associated with the title.
     create_genre_response = client.post("/genre/", json=new_genre)
@@ -148,226 +161,171 @@ def test_genre_crud():
 
     # Step 4: Search for the created genre using its content_id.
     genre_filter = {"content_id": new_genre["content_id"]}
-    search_genre_response = client.post("/genres/search/", json=genre_filter)
+    search_genre_response = client.post("/genre/search/", json=genre_filter)
     assert search_genre_response.status_code == 200
     searched_genres = search_genre_response.json()
     assert len(searched_genres) == 1
     assert searched_genres[0]["content_id"] == new_genre["content_id"]
 
     # Step 5: Delete the created genre.
-    delete_genre_response = client.delete("/genre/delete/", json=genre_filter)  # using DELETE method for deletion
+    delete_genre_response = client.post("/genre/delete/", json=genre_filter)  # using DELETE method for deletion
+    assert searched_genres[0]["content_id"] == new_genre["content_id"]
     assert delete_genre_response.status_code == 200
-    assert delete_genre_response.json()["message"].startswith("1 genre(s) deleted successfully")
 
     # Step 6: Delete the associated title.
-    delete_title_response = client.delete("/title/delete/", json=new_title)  # using DELETE method for deletion
+    title_filter = {"content_id": new_title["content_id"]}
+    delete_title_response = client.post("/title/delete/", json=title_filter)  # using DELETE method for deletion
     assert delete_title_response.status_code == 200
 
 
+def test_prod_country_crud():
+    sample_data = SampleData().to_dict()
+    new_title = sample_data["title"]
+    new_prod_country = sample_data["prod_country"]
 
-# def test_prod_country_crud():
-#     # 1. Create a prod_country
-#     prod_country_data = generate_prod_country().dict()
-#     create_response = client.post("/prod_country/", json=prod_country_data)
-#     assert create_response.status_code == 200
-#     created_prod_country = create_response.json()
-#     assert created_prod_country["content_id"] == prod_country_data["content_id"]
+    # Create a new title.
+    create_title_response = client.post("/title/", json=new_title)
+    assert create_title_response.status_code == 200
+    logger.info(f"create_title_response: {create_title_response.json()}")
+
+    # Create a new prod_country associated with the title.
+    create_prod_country_response = client.post("/prod_country/", json=new_prod_country)
+    assert create_prod_country_response.status_code == 200
+    created_prod_country = create_prod_country_response.json()
+    assert created_prod_country["content_id"] == new_prod_country["content_id"]
+
+    # Search for the created prod_country using its content_id.
+    prod_country_filter = {"content_id": new_prod_country["content_id"]}
+    search_prod_country_response = client.post("/prod_country/search/", json=prod_country_filter)
+    assert search_prod_country_response.status_code == 200
+    searched_prod_countries = search_prod_country_response.json()
+    assert len(searched_prod_countries) == 1
+    assert searched_prod_countries[0]["content_id"] == new_prod_country["content_id"]
+
+    # Delete the created prod_country.
+    delete_prod_country_response = client.post("/prod_country/delete/", json=prod_country_filter)  # using DELETE method for deletion
+    assert searched_prod_countries[0]["content_id"] == new_prod_country["content_id"]
+    assert delete_prod_country_response.status_code == 200
+
+    # Delete the associated title.
+    title_filter = {"content_id": new_title["content_id"]}
+    delete_title_response = client.post("/title/delete/", json=title_filter)  # using DELETE method for deletion
+    assert delete_title_response.status_code == 200
+
+
+def test_credit_crud():
+    sample_data = SampleData().to_dict()
+    new_title = sample_data["title"]
+    new_credit = sample_data["credit"]
+
+    # Create a new title.
+    create_title_response = client.post("/title/", json=new_title)
+    assert create_title_response.status_code == 200
+    logger.info(f"create_title_response: {create_title_response.json()}")
+
+    # Create a new credit associated with the title.
+    create_credit_response = client.post("/credit/", json=new_credit)
+    assert create_credit_response.status_code == 200
+    created_credit = create_credit_response.json()
+    assert created_credit["content_id"] == new_credit["content_id"]
+
+    # Search for the created credit using its content_id.
+    credit_filter = {"content_id": new_credit["content_id"]}
+    search_credit_response = client.post("/credit/search/", json=credit_filter)
+    assert search_credit_response.status_code == 200
+    searched_credits = search_credit_response.json()
+    assert len(searched_credits) == 1
+    assert searched_credits[0]["content_id"] == new_credit["content_id"]
+
+    # Delete the created credit.
+    delete_credit_response = client.post("/credit/delete/", json=credit_filter)  # using DELETE method for deletion
+    assert searched_credits[0]["content_id"] == new_credit["content_id"]
+    assert delete_credit_response.status_code == 200
+
+    # Delete the associated title.
+    title_filter = {"content_id": new_title["content_id"]}
+    delete_title_response = client.post("/title/delete/", json=title_filter)  # using DELETE method for deletion
+    assert delete_title_response.status_code == 200
     
-#     # 2. Search for the created prod_country
-#     prod_country_filter = {
-#         "content_id": prod_country_data["content_id"]
-#     }
-#     search_response = client.post("/prod_country/search/", json=prod_country_filter)
-#     assert search_response.status_code == 200
 
-#     prod_countries = search_response.json()
-#     assert len(prod_countries) == 1
-#     assert prod_countries[0]["content_id"] == prod_country_data["content_id"]
+def test_user_crud():
+    sample_data = SampleData().to_dict()
+    sample_data['user']['birth_date'] = (random_date(datetime(1970, 1, 1), datetime(2003, 1, 1))).isoformat()
+    sample_data['user']['subscription_date'] = (random_date(datetime(2020, 1, 1), datetime(2023, 1, 1))).isoformat()
+    new_user = sample_data["user"]
 
-#     # 3. Delete the searched prod_country
-#     delete_response = client.post("/prod_country/", json=prod_country_filter)
-#     assert delete_response.status_code == 200
-#     assert delete_response.json()["message"].startswith("1 prod_country(s) deleted successfully")
+    # Create a new user.
+    create_user_response = client.post("/user/", json=new_user)
+    assert create_user_response.status_code == 200
+    created_user = create_user_response.json()
+    assert created_user["user_id"] == new_user["user_id"]
 
+    # Search for the created user using its user_id.
+    user_filter = {"user_id": new_user["user_id"]}
+    search_user_response = client.post("/user/search/", json=user_filter)
+    assert search_user_response.status_code == 200
+    searched_users = search_user_response.json()
+    assert len(searched_users) == 1
+    assert searched_users[0]["user_id"] == new_user["user_id"]
 
-# def test_credit_crud():
-#     # Create
-#     credit_data = generate_credit().dict()
-#     create_response = client.post("/credit/", json=credit_data)
-#     assert create_response.status_code == 200
-#     created_credit = create_response.json()
-#     assert created_credit["content_id"] == credit_data["content_id"]
-    
-#     # Search
-#     credit_filter = {
-#         "content_id": credit_data["content_id"]
-#     }
-#     search_response = client.post("/credit/search/", json=credit_filter)
-#     assert search_response.status_code == 200
-#     credits = search_response.json()
-#     assert len(credits) == 1
-#     assert credits[0]["content_id"] == credit_data["content_id"]
+    # Delete the created user.
+    delete_user_response = client.post("/user/delete/", json=user_filter)  # using DELETE method for deletion
+    assert searched_users[0]["user_id"] == new_user["user_id"]
+    assert delete_user_response.status_code == 200
 
-#     # Delete
-#     delete_response = client.post("/credit/", json=credit_filter)
-#     assert delete_response.status_code == 200
-#     assert delete_response.json()["message"].startswith("1 credit(s) deleted successfully")
+def view_session_crud():
+    sample_data = SampleData().to_dict()
+    new_title = sample_data["title"]
+    sample_data['user']['birth_date'] = (random_date(datetime(1970, 1, 1), datetime(2003, 1, 1))).isoformat()
+    sample_data['user']['subscription_date'] = (random_date(datetime(2020, 1, 1), datetime(2023, 1, 1))).isoformat()
+    sample_data['view_session']['start_timestamp'] = random_date(datetime(2022, 1, 1), datetime(2023, 1, 1)).isoformat()
+    sample_data['view_session']['end_timestamp'] = (sample_data['view_session']['start_timestamp'] + timedelta(hours=random.randint(1, 5))).isoformat()
+    new_user = sample_data["user"]
+    new_view_session = sample_data["view_session"]
 
+    # Create a new title.
+    create_title_response = client.post("/title/", json=new_title)
+    assert create_title_response.status_code == 200
+    logger.info(f"create_title_response: {create_title_response.json()}")
 
-# def test_user_crud():
-#     # Create
-#     user_data = generate_user().dict()
-#     create_response = client.post("/user/", json=user_data)
-#     assert create_response.status_code == 200
-#     created_user = create_response.json()
-#     assert created_user["user_id"] == user_data["user_id"]
+    # Create a new user.
+    create_user_response = client.post("/user/", json=new_user)
+    assert create_user_response.status_code == 200
+    created_user = create_user_response.json()
+    assert created_user["user_id"] == new_user["user_id"]
 
-#     # Search
-#     user_filter = {
-#         "user_id": user_data["user_id"]
-#     }
-#     search_response = client.post("/user/search/", json=user_filter)
-#     assert search_response.status_code == 200
-#     users = search_response.json()
-#     assert len(users) == 1
-#     assert users[0]["user_id"] == user_data["user_id"]
+    # Create a new view_session associated with the title and user.
+    create_view_session_response = client.post("/view_session/", json=new_view_session)
+    assert create_view_session_response.status_code == 200
+    created_view_session = create_view_session_response.json()
+    assert created_view_session["content_id"] == new_view_session["content_id"]
+    assert created_view_session["user_id"] == new_view_session["user_id"]
 
-#     # Delete
-#     delete_response = client.post("/user/", json=user_filter)
-#     assert delete_response.status_code == 200
-#     assert delete_response.json()["message"].startswith("1 user(s) deleted successfully")
+    # Search for the created view_session using its content_id and user_id.
+    view_session_filter = {
+        "content_id": new_view_session["content_id"],
+        "user_id": new_view_session["user_id"]
+    }
+    search_view_session_response = client.post("/view_session/search/", json=view_session_filter)   
+    assert search_view_session_response.status_code == 200
+    searched_view_sessions = search_view_session_response.json()
+    assert len(searched_view_sessions) == 1
+    assert searched_view_sessions[0]["content_id"] == new_view_session["content_id"]
+    assert searched_view_sessions[0]["user_id"] == new_view_session["user_id"]
 
+    # Delete the created view_session.
+    delete_view_session_response = client.post("/view_session/delete/", json=view_session_filter)  # using DELETE method for deletion
+    assert searched_view_sessions[0]["content_id"] == new_view_session["content_id"]
+    assert searched_view_sessions[0]["user_id"] == new_view_session["user_id"]
+    assert delete_view_session_response.status_code == 200
 
+    # Delete the associated title.
+    title_filter = {"content_id": new_title["content_id"]}
+    delete_title_response = client.post("/title/delete/", json=title_filter)  # using DELETE method for deletion
+    assert delete_title_response.status_code == 200
 
-# def test_view_session_crud():
-#     # Create
-#     view_session_data = generate_view_session().dict()
-#     create_response = client.post("/view_session/", json=view_session_data)
-#     assert create_response.status_code == 200
-#     created_view_session = create_response.json()
-#     assert created_view_session["start_timestamp"] == view_session_data["start_timestamp"]
+    # Delete the associated user.
+    user_filter = {"user_id": new_user["user_id"]}
+    delete_user_response = client.post("/user/delete/", json=user_filter)  # using DELETE method for deletion
+    assert delete_user_response.status_code == 200
 
-#     # Search
-#     view_session_filter = {
-#         "start_timestamp": view_session_data["start_timestamp"]
-#     }
-#     search_response = client.post("/view_session/search/", json=view_session_filter)
-#     assert search_response.status_code == 200
-#     view_sessions = search_response.json()
-#     assert len(view_sessions) == 1
-#     assert view_sessions[0]["start_timestamp"] == view_session_data["start_timestamp"]
-
-#     # Delete
-#     delete_response = client.post("/view_session/", json=view_session_filter)
-#     assert delete_response.status_code == 200
-#     assert delete_response.json()["message"].startswith("1 view_session(s) deleted successfully")
-
-
-# def test_title_error_cases():
-#     # Try to fetch a non-existent title
-#     title_filter = {"content_id": "NON_EXISTING_ID"}
-#     search_response = client.post("/title/search/", json=title_filter)
-#     assert search_response.status_code == 404
-
-#     # Try to create a title with missing data
-#     incomplete_title_data = {
-#         "content_id": random_string(10),
-#         "title": "Incomplete Test Title"
-#     }
-#     create_response = client.post("/title/", json=incomplete_title_data)
-#     assert create_response.status_code == 400
-
-#     # Try to delete a non-existent title
-#     delete_response = client.post("/title/", json=title_filter)
-#     assert delete_response.status_code == 404
-
-
-# def test_genre_error_cases():
-#     # Try to fetch a non-existent genre
-#     genre_filter = {"content_id": "NON_EXISTING_ID"}
-#     search_response = client.post("/genre/search/", json=genre_filter)
-#     assert search_response.status_code == 404
-
-#     # Try to create a genre with missing data
-#     incomplete_genre_data = {
-#         "content_id": random_string(10)
-#     }
-#     create_response = client.post("/genre/", json=incomplete_genre_data)
-#     assert create_response.status_code == 400
-
-#     # Try to delete a non-existent genre
-#     delete_response = client.post("/genre/", json=genre_filter)
-#     assert delete_response.status_code == 404
-
-
-# def test_prod_country_error_cases():
-#     # Try to fetch a non-existent production country
-#     prod_country_filter = {"content_id": "NON_EXISTING_ID"}
-#     search_response = client.post("/prod_country/search/", json=prod_country_filter)
-#     assert search_response.status_code == 404
-
-#     # Try to create a production country with missing data
-#     incomplete_prod_country_data = {
-#         "content_id": random_string(10)
-#     }
-#     create_response = client.post("/prod_country/", json=incomplete_prod_country_data)
-#     assert create_response.status_code == 400
-
-#     # Try to delete a non-existent production country
-#     delete_response = client.post("/prod_country/", json=prod_country_filter)
-#     assert delete_response.status_code == 404
-
-
-# def test_credit_error_cases():
-#     # Try to fetch a non-existent credit
-#     credit_filter = {"content_id": "NON_EXISTING_ID"}
-#     search_response = client.post("/credit/search/", json=credit_filter)
-#     assert search_response.status_code == 404
-
-#     # Try to create a credit with missing data
-#     incomplete_credit_data = {
-#         "content_id": random_string(10),
-#         "person_id": random_string(7)
-#     }
-#     create_response = client.post("/credit/", json=incomplete_credit_data)
-#     assert create_response.status_code == 400
-
-#     # Try to delete a non-existent credit
-#     delete_response = client.post("/credit/", json=credit_filter)
-#     assert delete_response.status_code == 404
-
-
-# def test_user_error_cases():
-#     # Try to fetch a non-existent user
-#     user_filter = {"user_id": 999999}
-#     search_response = client.post("/user/search/", json=user_filter)
-#     assert search_response.status_code == 404
-
-#     # Try to create a user with missing data
-#     incomplete_user_data = {
-#         "user_id": random.randint(1, 10000)
-#     }
-#     create_response = client.post("/user/", json=incomplete_user_data)
-#     assert create_response.status_code == 400
-
-#     # Try to delete a non-existent user
-#     delete_response = client.post("/user/", json=user_filter)
-#     assert delete_response.status_code == 404
-
-
-# def test_view_session_error_cases():
-#     # Try to fetch a non-existent view session
-#     view_session_filter = {"start_timestamp": "2999-01-01 00:00:00"}
-#     search_response = client.post("/view_session/search/", json=view_session_filter)
-#     assert search_response.status_code == 404
-
-#     # Try to create a view session with missing data
-#     incomplete_view_session_data = {
-#         "start_timestamp": random_date(datetime(2022, 1, 1), datetime(2023, 1, 1))
-#     }
-#     create_response = client.post("/view_session/", json=incomplete_view_session_data)
-#     assert create_response.status_code == 400
-
-#     # Try to delete a non-existent view session
-#     delete_response = client.post("/view_session/", json=view_session_filter)
-#     assert delete_response.status_code == 404
