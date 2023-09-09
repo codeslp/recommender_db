@@ -10,8 +10,8 @@ from datetime import date
 from enum import Enum
 from pydantic import validator
 from sqlalchemy import PrimaryKeyConstraint, ForeignKeyConstraint
-from sqlmodel import Field, SQLModel, Session
-from typing import Optional
+from sqlmodel import Field, SQLModel, Session, Relationship
+from typing import Optional, List
 
 class Titles(SQLModel, table=True):
     __tablename__ = "titles"
@@ -28,6 +28,10 @@ class Titles(SQLModel, table=True):
     imdb_votes: Optional[int]
     is_year_best: Optional[bool]
     is_all_time_best: Optional[bool]
+    genres: List["Genres"] = Relationship(back_populates="titles")  # Added relationship to Genres
+    prod_countries: List["ProdCountries"] = Relationship(back_populates="titles")  # Added relationship to ProdCountries
+    credits: List["Credits"] = Relationship(back_populates="titles")  # Added relationship to Credits
+    sessions: List["ViewSessions"] = Relationship(back_populates="titles")  # Added relationship to ViewSessions
 
     @validator("content_type", pre=True, always=True)
     def set_content_type_to_lower(cls, v: str) -> str:
@@ -50,9 +54,10 @@ class TitleFilter(SQLModel):
 class Genres(SQLModel, table=True):
     __tablename__ = "genres"
     __table_args__ = (PrimaryKeyConstraint('content_id', 'genre'), {'schema': 'relational'})
-    content_id: str = Field(foreign_key="titles.content_id")
+    content_id: str = Field(foreign_key="relational.titles.content_id")
     genre: Optional[str] = Field(max_length=20)
     is_main_genre: bool
+    titles: "Titles" = Relationship(back_populates="genres")
 
 
 class GenreFilter(SQLModel):
@@ -62,10 +67,12 @@ class GenreFilter(SQLModel):
 
 class ProdCountries(SQLModel, table=True):
     __tablename__ = "prod_countries"
-    content_id: str = Field(foreign_key="titles.content_id")
+    content_id: str = Field(foreign_key="relational.titles.content_id")
     country: str = Field(max_length=20)
     is_main_country: bool
     __table_args__ = (PrimaryKeyConstraint('content_id', 'country'), {'schema': 'relational'})
+    titles: "Titles" = Relationship(back_populates="prod_countries")
+
 
 class ProdCountryFilter(SQLModel):
     content_id: Optional[str] = Field(max_length=10)
@@ -74,7 +81,7 @@ class ProdCountryFilter(SQLModel):
 
 class Credits(SQLModel, table=True):
     __table_name__ = "credits"
-    content_id: str = Field(foreign_key="titles.content_id")
+    content_id: str = Field(foreign_key="relational.titles.content_id")
     person_id: str = Field(max_length=7)
     first_name: str = Field(max_length=35)
     middle_name: Optional[str] = Field(max_length=35)
@@ -82,7 +89,8 @@ class Credits(SQLModel, table=True):
     character: str = Field(max_length=400)
     role: str = Field(max_length=15)
     __table_args__ = (PrimaryKeyConstraint('content_id', 'person_id', 'first_name', 'last_name', 'character', 'role'), {'schema': 'relational'})
-
+    titles: "Titles" = Relationship(back_populates="credits")
+    
 class CreditFilter(SQLModel):
     content_id: Optional[str] = Field(max_length=10)
     person_id: Optional[str] = Field(max_length=7)
@@ -104,6 +112,8 @@ class Users(SQLModel, table=True):
     birth_date: Optional[date]
     subscription_date: Optional[date]
     subscription_type: SubscriptionType
+    sessions: List["ViewSessions"] = Relationship(back_populates="users")
+
 
 class UserFilter(SQLModel):
     user_id: Optional[int]
@@ -115,11 +125,12 @@ class ViewSessions(SQLModel, table=True):
     __tablename__ = "sessions"
     start_timestamp: date
     end_timestamp: date
-    content_id: str = Field(foreign_key="titles.content_id")
-    user_id: int = Field(foreign_key="users.user_id")
+    content_id: str = Field(foreign_key="relational.titles.content_id")
+    user_id: int = Field(foreign_key="relational.users.user_id")
     user_rating: Optional[int]
-
     __table_args__ = (PrimaryKeyConstraint('start_timestamp', 'end_timestamp', 'content_id', 'user_id'), {'schema': 'relational'})
+    users: "Users" = Relationship(back_populates="sessions")
+    titles: "Titles" = Relationship(back_populates="sessions")
 
 class ViewSessionFilter(SQLModel):
     start_timestamp: Optional[date]
