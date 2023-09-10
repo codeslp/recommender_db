@@ -11,9 +11,6 @@ from sqlalchemy.exc import IntegrityError, OperationalError, StatementError, Dat
 from tabulate import tabulate
 from typing import Optional, List
 
-from models import (Titles, Genres, ProdCountries, Credits, Users, ViewSessions, Recommendations, 
-                    TitleFilter, GenreFilter, CreditFilter, UserFilter, ProdCountryFilter, 
-                    ViewSessionFilter)
 from db_local_api import read, write
 
 load_dotenv()
