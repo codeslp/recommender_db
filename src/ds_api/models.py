@@ -81,7 +81,7 @@ class ProdCountryFilter(SQLModel):
     is_main_country: Optional[bool]
 
 class Credits(SQLModel, table=True):
-    __table_name__ = "credits"
+    __tablename__ = "credits"
     content_id: str = Field(foreign_key="relational.titles.content_id")
     person_id: str = Field(max_length=7)
     first_name: str = Field(max_length=35)
@@ -141,9 +141,10 @@ class ViewSessionFilter(SQLModel):
     user_id: Optional[int]
     user_rating: Optional[int]
 
-class Recommendations(SQLModel):
+class Recommendations(SQLModel, table=True):
+    __tablename__ = "recommendations"
+    __table_args__ = (PrimaryKeyConstraint('content_id', 'user_id'), {'schema': 'relational'})
     content_id: str = Field(foreign_key="relational.titles.content_id")
     user_id: int = Field(foreign_key="relational.users.user_id")
-    __table_args__ = (PrimaryKeyConstraint('content_id', 'user_id'), {'schema': 'relational'})
     users: "Users" = Relationship(back_populates="recommendations")
     titles: "Titles" = Relationship(back_populates="recommendations")
