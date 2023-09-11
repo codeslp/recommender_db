@@ -1,6 +1,32 @@
 ## README - Project Overview
 
-This project comprises three core parts aimed at simplifying database interactions and offering an analysis framework.
+### Introduction
+
+This project utilizes the Kaggle Netflix movies and shows dataset, which can be found [here](https://www.kaggle.com/datasets/thedevastator/the-ultimate-netflix-tv-shows-and-movies-dataset). In our environment, we have transformed this data into a relational schema. This schema not only embodies the original dataset but also fabricates additional tables and data related to users, user ratings, viewing sessions, and recommendations. The primary intent behind this project is dual-faceted: 
+1. To provide analysts with access to raw data for analytical pursuits.
+2. To facilitate data scientists in their endeavors, especially while simulating or developing machine learning recommender systems.
+
+### Tools Used
+
+- **Database**: PostgreSQL
+- **API Framework**: FastAPI
+- **ORM**: SQLModel
+- **Analysis and Development**: Python/Python Notebooks
+
+### Getting Started
+
+1. **Dependencies Installation**: 
+   - Navigate to the `artifacts` folder and locate the `requirements.txt` file.
+   - Install the necessary Python packages by running: 
+     ```
+     pip install -r artifacts/requirements.txt
+     ```
+
+2. **Setting up the Environment**:
+   - If you're keen on accessing the system either as an analyst or a data scientist, ensure you create and configure your postgre db first, and then put your admin credentials in a .env file in your project directory. 
+   - Run the files in the order they are listed below.
+   - Analysts have the flexibility to interact using the provided notebook or tools like pgAdmin.
+   - Data scientists can harness either the local API or the web API to perform simulations, especially when conceptualizing a recommender system.
 
 ### Part 1: Analyst Schema and Environment
 
