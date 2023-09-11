@@ -1,5 +1,10 @@
 """
-This module provides utilities for reading from and writing to a database using SQLAlchemy.
+Utilities for reading from and writing to a database using SQLAlchemy.
+
+This module provides a set of tools encapsulated within a class and helper functions 
+that allow seamless reading from and writing to a PostgreSQL database. The primary class,
+`db_api`, acts as a connection manager and executor of SQL commands, while the helper 
+functions, `read` and `write`, provide more user-friendly interfaces for database interactions.
 """
 
 import os
