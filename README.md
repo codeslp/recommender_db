@@ -69,6 +69,18 @@ This testing suite, while still under development, provides foundational tests f
 2. **Local Python API**: `test_db_local_api.py`
 3. **Web API**: `test_db_web_api.py`
 
+To run the tests, navigate to the `src/ds_api/` directory and run:
+
+```
+export PYTHONPATH=/Users/bfaris96/Desktop/turing-proj/recommender_db/src/ds_api:$PYTHONPATH
+``` 
+
+Then, run:
+
+```
+pytest
+```
+
 ### Additional Resources
 
 1. **Database ERD**: Find an image representation of our latest database Entity-Relationship Diagram (ERD) in the `artifacts` directory.
