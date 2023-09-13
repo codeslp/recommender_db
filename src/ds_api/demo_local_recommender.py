@@ -5,17 +5,11 @@ It fetches the last five viewed content by the user and then finds similar conte
 based on genres. These recommendations are then written into a `recommendations` database table.
 """
 
-import os
 import logging
 
 from dotenv import load_dotenv
-import pandas as pd
-from pydantic import BaseModel
-from sqlalchemy import create_engine, event, text
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, OperationalError, StatementError, DataError
-from tabulate import tabulate
-from typing import Optional, List
+from typing import List
 
 from db_local_api import read, write
 
@@ -40,9 +34,9 @@ class RecoMaker:
             user_id (str): ID of the user for whom the recommendations are to be made.
         """
         self.user_id = user_id
-        self.content_id_list = List[str]
-        self.reco_list = List[str]
-        self.genre = str
+        self.content_id_list: List = []
+        self.reco_list: List = []
+        self.genre: str = ''
 
         self.get_last_5()
         self.get_similar_genre()
