@@ -3,7 +3,7 @@ Utilities for reading from and writing to a database using SQLAlchemy.
 
 This module provides a set of tools encapsulated within a class and helper functions 
 that allow seamless reading from and writing to a PostgreSQL database. The primary class,
-`db_api`, acts as a connection manager and executor of SQL commands, while the helper 
+`_db_api`, acts as a connection manager and executor of SQL commands, while the helper 
 functions, `read` and `write`, provide more user-friendly interfaces for database interactions.
 """
 
@@ -22,14 +22,14 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-class db_api:
+class _db_api:
     """
     A class to interact with a PostgreSQL database using SQLAlchemy.
     """
 
     def __init__(self):
         """
-        Initialize the db_api class and connect to the database.
+        Initialize the _db_api class and connect to the database.
         """
         self.engine = self.connect_to_db()
         self.set_search_path()
@@ -87,7 +87,7 @@ class db_api:
         except SQLAlchemyError as e:
             logger.error(f"Failed to write to database due to this error: {e}")
 
-api = db_api()
+_api = _db_api()
 
 def read(query, **kwargs):
     """
@@ -102,7 +102,7 @@ def read(query, **kwargs):
     Returns:
         DataFrame: The result of the query.
     """
-    data, columns = api.read(query, params=kwargs.get('params'))
+    data, columns = _api.read(query, params=kwargs.get('params'))
     if data is None or columns is None:
         logger.error("Query returned None.")
         return None
@@ -120,4 +120,4 @@ def write(query, **kwargs):
         **kwargs:
             params (dict, optional): Parameters for the SQL query.
     """
-    api.write(query, params=kwargs.get('params'))
+    _api.write(query, params=kwargs.get('params'))
