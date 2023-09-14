@@ -51,7 +51,7 @@ class _db_api:
         with self.engine.begin() as conn:
             conn.execute(text("SET search_path TO relational;"))
 
-    def read(self, query, params=None):
+    def _read(self, query, params=None):
         """
         Execute a SQL read query and return the result.
 
@@ -72,7 +72,7 @@ class _db_api:
             data, columns = None, None
         return data, columns
     
-    def write(self, query, params=None):
+    def _write(self, query, params=None):
         """
         Execute a SQL write query.
 
@@ -102,7 +102,7 @@ def read(query, **kwargs):
     Returns:
         DataFrame: The result of the query.
     """
-    data, columns = _api.read(query, params=kwargs.get('params'))
+    data, columns = _api._read(query, params=kwargs.get('params'))
     if data is None or columns is None:
         logger.error("Query returned None.")
         return None
@@ -120,4 +120,4 @@ def write(query, **kwargs):
         **kwargs:
             params (dict, optional): Parameters for the SQL query.
     """
-    _api.write(query, params=kwargs.get('params'))
+    _api._write(query, params=kwargs.get('params'))
