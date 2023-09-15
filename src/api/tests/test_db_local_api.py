@@ -1,5 +1,5 @@
 import unittest
-from ds_api.db_local_api import read, write
+from api.db_local_api import read, write
 
 class TestDBAPI(unittest.TestCase):
 
