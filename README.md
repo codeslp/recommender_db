@@ -6,6 +6,12 @@ This project utilizes the Kaggle Netflix movies and shows dataset, which can be 
 1. To provide analysts with access to raw data for analytical pursuits.
 2. To facilitate data scientists in their endeavors, especially while simulating or developing machine learning recommender systems.
 
+
+![Screen Shot 2023-09-17 at 3 02 38 PM](https://github.com/codeslp/recommender_db/assets/54224858/a611c71d-508a-40ee-bf5e-6995eb5d3b82)
+
+
+![Screen Shot 2023-09-17 at 3 02 01 PM](https://github.com/codeslp/recommender_db/assets/54224858/ebbc3efe-836b-4846-a043-436286599976)
+
 ### Tools Used
 
 - **Database**: PostgreSQL
